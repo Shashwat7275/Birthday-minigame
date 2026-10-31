@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#11162d" />
+  <title>A Little Universe Made for You — Birthday Adventure</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body data-text-size="medium">
+  <div id="game-viewport">
+    <!-- Main 2D World Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Scene Transition Fader -->
+    <div id="scene-fader"></div>
+
+    <!-- ================================================================== -->
+    <!-- ANIMATED TITLE SCREEN                                              -->
+    <!-- ================================================================== -->
+    <section id="title-screen" aria-label="Title Screen">
+      <div class="title-card">
+        <div id="title-recipient-badge" class="recipient-pill">Crafted for [Sister's Name]</div>
+        <h1 id="title-game-name">A Little Universe Made for You</h1>
+        <p id="title-game-subtitle" class="title-subtitle">A Starlight Birthday Adventure</p>
+        <p id="title-welcome-msg" class="title-welcome">
+          Tonight, the lanterns of this little universe flickered out—waiting for the birthday star to wake them up.
+        </p>
+
+        <div class="title-actions">
+          <button id="btn-continue-game" type="button" class="btn-primary btn-lg hidden">
+            <span class="btn-icon">✨</span> Continue Journey
+          </button>
+          <button id="btn-new-game" type="button" class="btn-primary btn-lg">
+            <span class="btn-icon">🌟</span> Start New Journey
+          </button>
+          <button id="btn-open-controls" type="button" class="btn-secondary">
+            🎮 How to Play &amp; Controls
+          </button>
+        </div>
+
+        <div class="title-footer">
+          <span class="orientation-tip">📱 Designed for Phones &amp; PCs (Portrait or Landscape)</span>
+          <!-- Discreet Admin Entry Link -->
+          <a href="admin.html" class="discreet-admin-link" title="Customize Game &amp; Personal Content">⚙️ Creator Studio (Admin)</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- IN-GAME HUD BAR                                                    -->
+    <!-- ================================================================== -->
+    <header id="game-hud" class="hidden">
+      <div class="hud-left">
+        <div class="hud-area-block">
+          <span id="hud-area-name" class="hud-area-title">The Whispering Garden</span>
+          <span id="hud-area-subtitle" class="hud-area-sub">Where Starlight Petals Slumber</span>
+        </div>
+        <div id="hud-quest-tracker" class="hud-quest-pill">Quest: Awaken the Whispering Garden</div>
+      </div>
+
+      <div class="hud-right">
+        <div class="hud-stat-pill" title="Collected Keepsakes &amp; Fragments">
+          <span>✨</span>
+          <span id="hud-fragment-count">0 / 11</span>
+        </div>
+        <button id="hud-btn-inventory" type="button" class="hud-icon-btn" aria-label="Open Inventory" title="Satchel / Inventory (I)">
+          🎒 <span class="hud-btn-text">Satchel</span>
+        </button>
+        <button id="hud-btn-quests" type="button" class="hud-icon-btn" aria-label="Open Quest Journal" title="Quest Journal (J)">
+          📖 <span class="hud-btn-text">Quests</span>
+        </button>
+        <button id="hud-btn-pause" type="button" class="hud-icon-btn" aria-label="Pause Menu" title="Pause / Settings (Esc)">
+          ⏸️
+        </button>
+      </div>
+    </header>
+
+    <!-- Area Opening Banner & Toast Notifications -->
+    <div id="area-banner" class="area-banner hidden"></div>
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Contextual Proximity Prompt -->
+    <div id="proximity-prompt" class="proximity-prompt hidden">Talk: Elder Rowan</div>
+
+    <!-- ================================================================== -->
+    <!-- MOBILE-FIRST VIRTUAL CONTROLS (Bottom-Left Joystick & Right Action)-->
+    <!-- ================================================================== -->
+    <div id="touch-controls" class="hidden">
+      <div id="joystick-zone" aria-label="Movement Joystick">
+        <div id="joystick-base">
+          <div id="joystick-stick"></div>
+        </div>
+      </div>
+
+      <div id="action-zone">
+        <button id="action-btn" type="button" aria-label="Interact">
+          <span id="action-btn-label">Explore</span>
+          <small id="action-key-hint">TAP</small>
+        </button>
+      </div>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- DIALOGUE INTERFACE                                                 -->
+    <!-- ================================================================== -->
+    <div id="dialogue-box" class="dialogue-box hidden" role="dialog" aria-live="polite">
+      <div class="dialogue-header">
+        <span id="dialogue-speaker" class="dialogue-speaker">Elder Rowan</span>
+      </div>
+      <p id="dialogue-text" class="dialogue-text"></p>
+      <div class="dialogue-footer">
+        <button id="dialogue-next-btn" type="button" class="btn-primary btn-sm">Next ▸</button>
+      </div>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- INVENTORY / SATCHEL MODAL                                          -->
+    <!-- ================================================================== -->
+    <div id="modal-inventory" class="game-modal-backdrop hidden" role="dialog" aria-modal="true">
+      <div class="game-modal-card">
+        <div class="modal-header">
+          <h2>🎒 Starlight Satchel (Inventory)</h2>
+          <button id="btn-close-inventory" type="button" class="modal-close-btn" aria-label="Close">✕</button>
+        </div>
+        <div id="inventory-list" class="inventory-grid"></div>
+      </div>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- QUEST JOURNAL MODAL                                                -->
+    <!-- ================================================================== -->
+    <div id="modal-quests" class="game-modal-backdrop hidden" role="dialog" aria-modal="true">
+      <div class="game-modal-card">
+        <div class="modal-header">
+          <h2>📖 Traveler's Quest Journal</h2>
+          <button id="btn-close-quests" type="button" class="modal-close-btn" aria-label="Close">✕</button>
+        </div>
+        <div id="quest-journal-list" class="quest-list"></div>
+      </div>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- PUZZLE & MEMORY PEDESTAL MODAL                                     -->
+    <!-- ================================================================== -->
+    <div id="modal-puzzle" class="game-modal-backdrop hidden" role="dialog" aria-modal="true">
+      <div class="game-modal-card">
+        <div class="modal-header">
+          <h2 id="puzzle-title">Ancient Mechanism</h2>
+          <button id="btn-close-puzzle" type="button" class="modal-close-btn" aria-label="Close">✕</button>
+        </div>
+        <p id="puzzle-instructions" class="puzzle-instructions"></p>
+        <div id="puzzle-feedback" class="puzzle-feedback"></div>
+        <div id="puzzle-interactive-body" class="puzzle-body"></div>
+      </div>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- CONTROLS & GUIDE MODAL                                             -->
+    <!-- ================================================================== -->
+    <div id="modal-controls" class="game-modal-backdrop hidden" role="dialog" aria-modal="true">
+      <div class="game-modal-card">
+        <div class="modal-header">
+          <h2>🎮 Controls &amp; Adventure Guide</h2>
+          <button id="btn-close-controls" type="button" class="modal-close-btn" aria-label="Close">✕</button>
+        </div>
+        <div class="controls-guide-grid">
+          <div class="control-block">
+            <h3>📱 Smartphone / Touch Controls</h3>
+            <ul>
+              <li><strong>Bottom-Left Joystick:</strong> Drag with your left thumb in any direction to walk smoothly. Release to stop immediately.</li>
+              <li><strong>Bottom-Right Action Button:</strong> Tap when near characters, glowing petals, signs, or portals to <em>Talk, Collect, Examine, or Activate</em>.</li>
+              <li><strong>Direct World Tap:</strong> You can also tap directly on nearby highlighted characters or objects.</li>
+            </ul>
+          </div>
+          <div class="control-block">
+            <h3>💻 Desktop / Laptop Controls</h3>
+            <ul>
+              <li><strong>WASD or Arrow Keys:</strong> Move your traveler across the world.</li>
+              <li><strong>E or Spacebar:</strong> Interact with nearby characters, items, and mechanisms.</li>
+              <li><strong>I Key:</strong> Open your Starlight Satchel (Inventory).</li>
+              <li><strong>J Key:</strong> Open your Quest Journal.</li>
+              <li><strong>Esc Key:</strong> Pause game &amp; audio settings.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- PAUSE & AUDIO SETTINGS MODAL                                       -->
+    <!-- ================================================================== -->
+    <div id="modal-pause" class="game-modal-backdrop hidden" role="dialog" aria-modal="true">
+      <div class="game-modal-card modal-narrow">
+        <div class="modal-header">
+          <h2>⏸️ Game Paused</h2>
+          <button id="btn-resume-game" type="button" class="modal-close-btn" aria-label="Resume">✕</button>
+        </div>
+        <div class="pause-settings-list">
+          <label class="setting-toggle-row">
+            <span>🎵 Background Music</span>
+            <input type="checkbox" id="toggle-music" checked />
+          </label>
+          <label class="setting-toggle-row">
+            <span>🔔 Sound Effects</span>
+            <input type="checkbox" id="toggle-sfx" checked />
+          </label>
+        </div>
+        <div class="pause-actions">
+          <button id="btn-pause-controls" type="button" class="btn-secondary">🎮 Controls Guide</button>
+          <a href="admin.html" class="btn-secondary" style="text-align:center;text-decoration:none;">⚙️ Open Creator Studio (Admin)</a>
+          <button id="btn-return-title" type="button" class="btn-secondary">🏠 Save &amp; Return to Title</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- FINAL BIRTHDAY SANCTUARY CELEBRATION & LETTER MODAL                -->
+    <!-- ================================================================== -->
+    <div id="modal-finale" class="game-modal-backdrop hidden" role="dialog" aria-modal="true">
+      <div class="game-modal-card modal-finale-card">
+        <div class="finale-hero">
+          <div class="finale-crown">👑 ✨ 🎂 ✨ 👑</div>
+          <h2 id="finale-banner-title">Happy Birthday! ✨</h2>
+          <p id="finale-banner-subtitle" class="finale-subtitle"></p>
+        </div>
+
+        <section class="finale-letter-paper">
+          <h3 id="finale-letter-greeting">Dearest Sister,</h3>
+          <div id="finale-letter-body" class="finale-letter-paragraphs"></div>
+          <p id="finale-letter-signoff" class="finale-signoff"></p>
+        </section>
+
+        <section class="finale-section">
+          <h3>📸 Cherished Memories &amp; Keepsakes</h3>
+          <div id="finale-photo-gallery" class="finale-photo-grid"></div>
+        </section>
+
+        <section class="finale-section">
+          <h3>💖 Little Echoes of You</h3>
+          <div id="finale-favorites-list" class="finale-traits-wrap"></div>
+        </section>
+
+        <div class="finale-actions">
+          <button id="btn-replay-finale" type="button" class="btn-primary">🎆 Launch Celebration Fireworks</button>
+          <button id="btn-close-finale" type="button" class="btn-secondary">🌌 Return to Sanctuary World</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/defaultConfig.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/sprites.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/engine.js"></script>
+</body>
+</html>

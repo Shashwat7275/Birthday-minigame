@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Creator Studio (Admin Panel) — A Little Universe Made for You</title>
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+  <!-- ==================================================================== -->
+  <!-- CLIENT-SIDE PASSPHRASE GATE                                          -->
+  <!-- ==================================================================== -->
+  <section id="admin-auth-gate" class="auth-gate">
+    <div class="auth-card">
+      <div class="auth-badge">🔐 Creator Studio Access</div>
+      <h1>Admin Panel Login</h1>
+      <p class="auth-desc">
+        Enter the admin passphrase to customize names, birthday letters, memories, photos, quests, and puzzles.
+      </p>
+
+      <form id="admin-login-form">
+        <label for="admin-pass-input">Admin Passphrase</label>
+        <input
+          type="password"
+          id="admin-pass-input"
+          placeholder="Enter passphrase (default: starlight)"
+          autocomplete="off"
+          required
+        />
+        <div id="admin-auth-error" class="auth-error hidden">Incorrect passphrase. Default is: starlight</div>
+        <button type="submit" class="btn-primary btn-block">Unlock Creator Studio</button>
+      </form>
+
+      <div class="security-disclosure">
+        <strong>ℹ️ Honest Security Disclosure:</strong> Because this is a static, browser-based game with no external backend required, this passphrase is a client-side convenience barrier to prevent the birthday recipient from accidentally stumbling into the editor during gameplay. Someone who inspects the browser storage or source files can view or bypass it.
+      </div>
+
+      <div class="auth-footer">
+        <a href="index.html" class="link-back">← Return to Game Title Screen</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================================================================== -->
+  <!-- MAIN ADMIN APPLICATION                                               -->
+  <!-- ==================================================================== -->
+  <div id="admin-app" class="admin-layout hidden">
+    <!-- Sidebar / Top Navigation -->
+    <aside class="admin-sidebar">
+      <div class="brand-box">
+        <span class="brand-tag">✨ Creator Studio</span>
+        <h2 id="sidebar-game-title">A Little Universe Made for You</h2>
+      </div>
+
+      <nav class="admin-nav" aria-label="Admin Sections">
+        <button type="button" class="nav-tab active" data-tab="tab-dashboard">📊 Dashboard &amp; Status</button>
+        <button type="button" class="nav-tab" data-tab="tab-general">⚙️ A. General &amp; Identity</button>
+        <button type="button" class="nav-tab" data-tab="tab-story">💌 B. Story, Letter &amp; Dialogue</button>
+        <button type="button" class="nav-tab" data-tab="tab-photos">📸 C. Photos &amp; Audio Assets</button>
+        <button type="button" class="nav-tab" data-tab="tab-quests">📖 D. Quests &amp; Collectibles</button>
+        <button type="button" class="nav-tab" data-tab="tab-puzzles">🧩 E. Puzzle Editor</button>
+        <button type="button" class="nav-tab" data-tab="tab-world">🗺️ F. World &amp; Level Editor</button>
+        <button type="button" class="nav-tab" data-tab="tab-export">💾 G. Save, Export &amp; Package</button>
+        <button type="button" class="nav-tab" data-tab="tab-preview">👁️ H. Live Preview Mode</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button type="button" id="btn-quick-save" class="btn-primary btn-block">💾 Save All Changes</button>
+        <a href="index.html" class="btn-secondary btn-block" style="text-align:center;text-decoration:none;">🎮 Play Game</a>
+      </div>
+    </aside>
+
+    <!-- Main Content Workspace -->
+    <main class="admin-main">
+      <!-- Sticky Status Bar -->
+      <header class="admin-topbar">
+        <div id="admin-status-banner" class="status-pill status-ok">
+          ✓ Configuration loaded and valid
+        </div>
+        <div class="topbar-actions">
+          <button type="button" id="btn-topbar-save" class="btn-primary btn-sm">💾 Save Changes</button>
+          <button type="button" id="btn-topbar-preview" class="btn-secondary btn-sm">👁️ Preview Game</button>
+        </div>
+      </header>
+
+      <div id="admin-alert-box" class="alert-box hidden"></div>
+
+      <!-- ================================================================ -->
+      <!-- TAB 0: DASHBOARD & OVERVIEW                                      -->
+      <!-- ================================================================ -->
+      <section id="tab-dashboard" class="admin-section active">
+        <div class="section-header">
+          <h1>📊 Creator Dashboard &amp; Personalization Readiness</h1>
+          <p>Review your customization progress, validation checks, and quick shortcuts before sharing the game with your sister.</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-label">Recipient Name</span>
+            <strong id="dash-recipient" class="stat-value">-</strong>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Memories &amp; Photos</span>
+            <strong id="dash-photos-count" class="stat-value">4 Memories</strong>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Quests &amp; Puzzles</span>
+            <strong id="dash-quests-count" class="stat-value">6 Quests / 5 Puzzles</strong>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Last Saved</span>
+            <strong id="dash-last-saved" class="stat-value">-</strong>
+          </div>
+        </div>
+
+        <div class="card-panel">
+          <h3>🔍 Personalization &amp; Validation Checklist</h3>
+          <ul id="dash-validation-list" class="checklist"></ul>
+        </div>
+
+        <div class="card-panel">
+          <h3>🚀 How Personalization Storage &amp; Sharing Works</h3>
+          <p>
+            <strong>1. Local Browser Testing:</strong> Clicking <em>Save All Changes</em> stores your configuration in this browser's <code>localStorage</code> (completely separate from player save progress, so editing messages never erases gameplay progress).
+          </p>
+          <p>
+            <strong>2. Publishing for Your Sister on Another Device:</strong> Because browser <code>localStorage</code> does not automatically sync across different phones, once you finish customizing everything, open tab <strong>G. Save, Export &amp; Package</strong> and click <strong>"Download Bundled defaultConfig.js"</strong> (or click <strong>"Save Directly to Project Folder"</strong> if running via <code>server.py</code>) so your sister's phone loads your custom photos, names, and birthday letter immediately!
+          </p>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- TAB A: GENERAL SETTINGS & IDENTITY                               -->
+      <!-- ================================================================ -->
+      <section id="tab-general" class="admin-section">
+        <div class="section-header">
+          <h1>⚙️ A. General Settings &amp; Identity</h1>
+          <p>Customize the game title, your sister's name and nickname, sender signature, text size, and admin passphrase.</p>
+        </div>
+
+        <div class="card-panel form-grid-2">
+          <div class="form-group">
+            <label for="cfg-game-title">Game Title</label>
+            <input type="text" id="cfg-game-title" />
+          </div>
+          <div class="form-group">
+            <label for="cfg-game-subtitle">Subtitle</label>
+            <input type="text" id="cfg-game-subtitle" />
+          </div>
+          <div class="form-group">
+            <label for="cfg-recipient-name">Sister's Name (Recipient)</label>
+            <input type="text" id="cfg-recipient-name" placeholder="e.g. Maya" />
+          </div>
+          <div class="form-group">
+            <label for="cfg-recipient-nickname">Sister's Nickname</label>
+            <input type="text" id="cfg-recipient-nickname" placeholder="e.g. Starlight" />
+          </div>
+          <div class="form-group">
+            <label for="cfg-birthday-age">Birthday Age / Milestone (Optional)</label>
+            <input type="text" id="cfg-birthday-age" placeholder="e.g. 22" />
+          </div>
+          <div class="form-group">
+            <label for="cfg-sender-name">Sender's Name (Your Name / Signature)</label>
+            <input type="text" id="cfg-sender-name" placeholder="e.g. Your Brother Alex" />
+          </div>
+          <div class="form-group">
+            <label for="cfg-player-name">Player Character Display Name</label>
+            <input type="text" id="cfg-player-name" placeholder="e.g. Maya / Traveler" />
+          </div>
+          <div class="form-group">
+            <label for="cfg-text-size">In-Game Text Size</label>
+            <select id="cfg-text-size">
+              <option value="small">Small</option>
+              <option value="medium">Medium (Recommended)</option>
+              <option value="large">Large (High Readability)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="cfg-difficulty">Gameplay Difficulty</label>
+            <select id="cfg-difficulty">
+              <option value="relaxed">Relaxed (Generous Hints)</option>
+              <option value="normal">Normal</option>
+              <option value="challenging">Challenging</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="cfg-admin-pass">Admin Panel Passphrase</label>
+            <input type="text" id="cfg-admin-pass" />
+          </div>
+        </div>
+
+        <div class="card-panel">
+          <div class="form-group">
+            <label for="cfg-welcome-msg">Title Screen Welcome Message</label>
+            <textarea id="cfg-welcome-msg" rows="2"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- TAB B: STORY, BIRTHDAY LETTER & NPC DIALOGUE                     -->
+      <!-- ================================================================ -->
+      <section id="tab-story" class="admin-section">
+        <div class="section-header">
+          <h1>💌 B. Story, Birthday Letter &amp; NPC Dialogue</h1>
+          <p>Edit the opening and closing narration, the heartfelt final birthday letter, inside jokes, favorite things, and every character's dialogue.</p>
+        </div>
+
+        <div class="card-panel">
+          <h3>📜 Opening &amp; Closing Narration</h3>
+          <div class="form-group">
+            <label for="cfg-opening-narration">Opening Story Lines (One paragraph per line)</label>
+            <textarea id="cfg-opening-narration" rows="4"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="cfg-closing-narration">Closing Sanctuary Lines (One paragraph per line)</label>
+            <textarea id="cfg-closing-narration" rows="3"></textarea>
+          </div>
+        </div>
+
+        <div class="card-panel">
+          <h3>🎂 Final Sanctuary Birthday Letter</h3>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="cfg-finale-banner">Final Celebration Banner Heading</label>
+              <input type="text" id="cfg-finale-banner" />
+            </div>
+            <div class="form-group">
+              <label for="cfg-letter-greeting">Birthday Letter Greeting</label>
+              <input type="text" id="cfg-letter-greeting" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="cfg-letter-body">Birthday Letter Paragraphs (One paragraph per line — supports long text without clipping)</label>
+            <textarea id="cfg-letter-body" rows="7"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="cfg-letter-signoff">Birthday Letter Sign-Off</label>
+            <textarea id="cfg-letter-signoff" rows="2"></textarea>
+          </div>
+        </div>
+
+        <div class="card-panel form-grid-2">
+          <div class="form-group">
+            <label for="cfg-favorites">Her Favorite Things (One item per line)</label>
+            <textarea id="cfg-favorites" rows="5"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="cfg-jokes">Inside Jokes &amp; Affectionate References (One per line)</label>
+            <textarea id="cfg-jokes" rows="5"></textarea>
+          </div>
+        </div>
+
+        <div class="card-panel">
+          <h3>🗣️ NPC Character Names &amp; Conversations</h3>
+          <div id="npc-editor-container" class="stack-list"></div>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- TAB C: PHOTOGRAPHS, MEMORIES & AUDIO ASSETS                      -->
+      <!-- ================================================================ -->
+      <section id="tab-photos" class="admin-section">
+        <div class="section-header">
+          <h1>📸 C. Photographs, Memories &amp; Audio Manager</h1>
+          <p>Upload personal photographs (automatically resized/optimized for smooth mobile performance), edit captions, reorder memories, and configure music/audio.</p>
+        </div>
+
+        <div class="card-panel">
+          <div class="panel-header-row">
+            <h3>🖼️ Memory Pedestals &amp; Sanctuary Photo Gallery</h3>
+            <button type="button" id="btn-add-memory" class="btn-secondary btn-sm">+ Add New Memory Photo</button>
+          </div>
+          <div id="memories-editor-container" class="stack-list"></div>
+        </div>
+
+        <div class="card-panel">
+          <h3>🎵 Audio &amp; Music Settings</h3>
+          <div class="form-grid-2">
+            <label class="checkbox-card">
+              <input type="checkbox" id="cfg-audio-music" />
+              <span>Enable Background Music</span>
+            </label>
+            <label class="checkbox-card">
+              <input type="checkbox" id="cfg-audio-sfx" />
+              <span>Enable Sound Effects</span>
+            </label>
+            <div class="form-group">
+              <label for="cfg-music-vol">Music Volume (<span id="lbl-music-vol">45%</span>)</label>
+              <input type="range" id="cfg-music-vol" min="0" max="1" step="0.05" />
+            </div>
+            <div class="form-group">
+              <label for="cfg-sfx-vol">Sound Effects Volume (<span id="lbl-sfx-vol">65%</span>)</label>
+              <input type="range" id="cfg-sfx-vol" min="0" max="1" step="0.05" />
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top:14px;">
+            <label for="cfg-custom-music-file">Optional Custom Background Music Upload (MP3/WAV/OGG, max 2.5MB)</label>
+            <div class="file-row">
+              <input type="file" id="cfg-custom-music-file" accept="audio/*" />
+              <button type="button" id="btn-clear-custom-music" class="btn-secondary btn-sm">Use Built-in Music Box</button>
+            </div>
+            <small id="custom-music-status" class="muted-hint">Using built-in anime music-box synthesizer.</small>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- TAB D: QUESTS & COLLECTIBLES EDITOR                              -->
+      <!-- ================================================================ -->
+      <section id="tab-quests" class="admin-section">
+        <div class="section-header">
+          <h1>📖 D. Quests &amp; Collectibles Editor</h1>
+          <p>Customize quest titles, descriptions, rewards, and collectible item names and pickup messages.</p>
+        </div>
+
+        <div class="card-panel">
+          <h3>🌟 Quests</h3>
+          <div id="quests-editor-container" class="stack-list"></div>
+        </div>
+
+        <div class="card-panel">
+          <h3>🌸 Collectibles &amp; Secret Keepsakes</h3>
+          <div id="collectibles-editor-container" class="stack-list"></div>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- TAB E: PUZZLE EDITOR                                             -->
+      <!-- ================================================================ -->
+      <section id="tab-puzzles" class="admin-section">
+        <div class="section-header">
+          <h1>🧩 E. Puzzle Editor &amp; Solvability Validator</h1>
+          <p>Customize puzzle titles, instructions, prompts, hints, solutions, and completion messages. Solvability is validated automatically so levels never become impossible.</p>
+        </div>
+
+        <div id="puzzles-editor-container" class="stack-list"></div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- TAB F: WORLD & LEVEL EDITOR                                      -->
+      <!-- ================================================================ -->
+      <section id="tab-world" class="admin-section">
+        <div class="section-header">
+          <h1>🗺️ F. World &amp; Level Editor</h1>
+          <p>Customize the four playable areas: names, subtitles, chapter opening banners, and sky/ground color palettes.</p>
+        </div>
+
+        <div id="areas-editor-container" class="stack-list"></div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- TAB G: SAVE, EXPORT, IMPORT & PACKAGE                            -->
+      <!-- ================================================================ -->
+      <section id="tab-export" class="admin-section">
+        <div class="section-header">
+          <h1>💾 G. Save, Export, Import &amp; Distributable Packaging</h1>
+          <p>Back up your work, export or import JSON configurations, or generate a ready-to-deploy <code>defaultConfig.js</code> file so your sister sees your customizations on any device.</p>
+        </div>
+
+        <div class="card-panel">
+          <h3>1. Local Browser Save &amp; Backup</h3>
+          <div class="button-row">
+            <button type="button" id="btn-save-browser" class="btn-primary">💾 Save to Browser Storage</button>
+            <button type="button" id="btn-restore-backup" class="btn-secondary">⏪ Restore Previous Backup</button>
+            <button type="button" id="btn-reset-defaults" class="btn-danger">🔄 Reset Config to Factory Defaults</button>
+            <button type="button" id="btn-reset-player-save" class="btn-secondary">🧹 Reset Player Gameplay Save Only</button>
+          </div>
+        </div>
+
+        <div class="card-panel">
+          <h3>2. Export &amp; Import Configuration JSON</h3>
+          <p>Save a portable <code>.json</code> backup of your entire personalized configuration or load one from disk.</p>
+          <div class="button-row">
+            <button type="button" id="btn-export-json" class="btn-primary">📥 Export Configuration (.json)</button>
+            <label class="btn-secondary file-label-btn">
+              📤 Import Configuration (.json)
+              <input type="file" id="input-import-json" accept=".json,application/json" style="display:none;" />
+            </label>
+          </div>
+        </div>
+
+        <div class="card-panel">
+          <h3>3. Package for Static Hosting / Sharing With Your Sister</h3>
+          <p>
+            When you deploy the game online (e.g. GitHub Pages, Netlify, Vercel, Cloudflare Pages), the game loads <code>js/defaultConfig.js</code>. Use either button below to bake your current customizations directly into <code>js/defaultConfig.js</code>:
+          </p>
+          <div class="button-row">
+            <button type="button" id="btn-save-to-disk-server" class="btn-primary">
+              ⚡ Write Directly to E:\birthday-adventure\js\defaultConfig.js (Local Server)
+            </button>
+            <button type="button" id="btn-download-bundled-js" class="btn-secondary">
+              📦 Download Personalized defaultConfig.js
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- TAB H: LIVE PREVIEW MODE                                         -->
+      <!-- ================================================================ -->
+      <section id="tab-preview" class="admin-section">
+        <div class="section-header">
+          <h1>👁️ H. Live Non-Destructive Preview Mode</h1>
+          <p>Test your unsaved or saved edits right here or in a new tab without altering your sister's actual saved gameplay progress.</p>
+        </div>
+
+        <div class="card-panel">
+          <div class="button-row" style="margin-bottom:14px;">
+            <button type="button" class="btn-primary btn-preview-scene" data-scene="title">Preview Title Screen</button>
+            <button type="button" class="btn-secondary btn-preview-scene" data-scene="garden">Preview Area 1: Garden</button>
+            <button type="button" class="btn-secondary btn-preview-scene" data-scene="village">Preview Area 2: Village</button>
+            <button type="button" class="btn-secondary btn-preview-scene" data-scene="forest">Preview Area 3: Forest</button>
+            <button type="button" class="btn-secondary btn-preview-scene" data-scene="sanctuary">Preview Area 4: Sanctuary</button>
+            <button type="button" class="btn-primary btn-preview-scene" data-scene="finale">🎂 Preview Final Birthday Surprise</button>
+          </div>
+
+          <div class="preview-iframe-wrap">
+            <iframe id="admin-preview-iframe" src="about:blank" title="Live Game Preview"></iframe>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/defaultConfig.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

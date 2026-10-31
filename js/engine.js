@@ -51,6 +51,9 @@
       this.nearbyTarget = null;
       this.particles = [];
       this.fireworks = [];
+      this.overlayFireworks = [];
+      this.overlayCanvas = null;
+      this.overlayCtx = null;
       this.stars = [];
 
       // Active dialogue queue
@@ -63,6 +66,9 @@
       this.canvas = document.getElementById("game-canvas");
       if (!this.canvas) return;
       this.ctx = this.canvas.getContext("2d");
+
+      this.overlayCanvas = document.getElementById("fireworks-overlay-canvas");
+      if (this.overlayCanvas) this.overlayCtx = this.overlayCanvas.getContext("2d");
 
       this.reloadConfigAndState();
       this.initAmbientParticles();
@@ -168,6 +174,10 @@
       const h = container ? container.clientHeight : window.innerHeight;
       this.canvas.width = Math.max(320, w);
       this.canvas.height = Math.max(320, h);
+      if (this.overlayCanvas) {
+        this.overlayCanvas.width = this.canvas.width;
+        this.overlayCanvas.height = this.canvas.height;
+      }
       this.camera.width = this.canvas.width;
       this.camera.height = this.canvas.height;
       this.updateCamera(1);
@@ -1107,13 +1117,51 @@
     }
 
     spawnCelebrationFireworks() {
-      for (let i = 0; i < 6; i++) {
+      // Also spawn bursts on world canvas if player is in game
+      for (let i = 0; i < 4; i++) {
         setTimeout(() => {
           const fx = 250 + Math.random() * 700;
           const fy = 160 + Math.random() * 350;
           const colors = ["#ff7eb6", "#ffd166", "#72efdd", "#c77dff", "#80ed99"];
-          this.spawnPickupBurst(fx, fy, colors[i % colors.length], 24);
+          this.spawnPickupBurst(fx, fy, colors[i % colors.length], 20);
         }, i * 240);
+      }
+
+      // Dazzling firework explosions on screen overlay canvas directly on top of modal window
+      const W = window.innerWidth;
+      const H = window.innerHeight;
+      const colorPalettes = [
+        ["#ff7eb6", "#ffd166", "#ffffff", "#ff4081"],
+        ["#72efdd", "#48cae4", "#ffffff", "#00f5d4"],
+        ["#c77dff", "#e0aaff", "#ffd166", "#9d4edd"],
+        ["#80ed99", "#57cc99", "#fff3b0", "#38b000"],
+        ["#ff9f68", "#ffd166", "#ff5964", "#ffffff"]
+      ];
+
+      for (let burst = 0; burst < 9; burst++) {
+        setTimeout(() => {
+          const sx = W * 0.12 + Math.random() * (W * 0.76);
+          const sy = H * 0.12 + Math.random() * (H * 0.52);
+          const colors = colorPalettes[burst % colorPalettes.length];
+          const count = 38;
+
+          for (let i = 0; i < count; i++) {
+            const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.25;
+            const speed = 75 + Math.random() * 210;
+            const life = 1.1 + Math.random() * 0.9;
+            this.overlayFireworks.push({
+              x: sx,
+              y: sy,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed - 25,
+              gravity: 110,
+              color: colors[i % colors.length],
+              size: 3.5 + Math.random() * 3.5,
+              life: life,
+              maxLife: life
+            });
+          }
+        }, burst * 240);
       }
     }
 
@@ -1312,6 +1360,16 @@
         f.y += f.vy * dt;
         f.life -= dt;
         if (f.life <= 0) this.fireworks.splice(i, 1);
+      }
+
+      // Update screen overlay celebration fireworks
+      for (let i = this.overlayFireworks.length - 1; i >= 0; i--) {
+        const f = this.overlayFireworks[i];
+        f.x += f.vx * dt;
+        f.y += f.vy * dt;
+        f.vy += (f.gravity || 110) * dt;
+        f.life -= dt;
+        if (f.life <= 0) this.overlayFireworks.splice(i, 1);
       }
 
       if (!this.running || this.paused || this.modalOpen || this.dialogueOpen) {
@@ -1705,6 +1763,27 @@
       });
 
       ctx.restore();
+
+      // 9. Render Screen Overlay Celebration Fireworks (On top of modals, cards & windows)
+      if (this.overlayCtx && this.overlayCanvas) {
+        this.overlayCtx.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
+        this.overlayFireworks.forEach((f) => {
+          const progress = Math.max(0, Math.min(1, f.life / f.maxLife));
+          this.overlayCtx.save();
+          this.overlayCtx.globalAlpha = progress;
+          this.overlayCtx.fillStyle = f.color;
+          this.overlayCtx.beginPath();
+          this.overlayCtx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
+          this.overlayCtx.fill();
+
+          // Bright sparkling center
+          this.overlayCtx.fillStyle = "#ffffff";
+          this.overlayCtx.beginPath();
+          this.overlayCtx.arc(f.x, f.y, f.size * 0.45, 0, Math.PI * 2);
+          this.overlayCtx.fill();
+          this.overlayCtx.restore();
+        });
+      }
     }
 
     renderAreaGroundDetails(ctx, areaId, cfgArea) {

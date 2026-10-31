@@ -1,0 +1,147 @@
+{
+  "total": 28,
+  "passed": 28,
+  "failed": 0,
+  "results": [
+    {
+      "name": "1. Title screen loads with game title",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "2. New game starts in Area 1 (garden)",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "3. Opening dialogue advances and closes cleanly",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "4. Joystick moves character smoothly & stops on release",
+      "passed": true,
+      "detail": "start=160, moved=205"
+    },
+    {
+      "name": "5. Collision detection prevents walking through solid boundaries",
+      "passed": true,
+      "detail": "x=60"
+    },
+    {
+      "name": "6. Proximity detector highlights Elder Rowan with Talk action",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "7. Interacting with NPC opens dialogue",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "8. Locked portal prevents premature area transition",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "9. Collectibles are picked up and added to Inventory",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "10. Inventory modal renders collected items",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "11. Sunbeam Pedestal puzzle completes Quest 1 and unlocks Area 2 (village)",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "12. Level transition loads Area 2 (The Memory Village)",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "13. Returning Silver Whisk to Pip completes Baker quest",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "14. Clocktower 3-Lantern Dial puzzle validates clues and unlocks Area 3 (forest)",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "15. Forest Mist Brook hazard recovers player safely to dry bank checkpoint",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "16. Echo Crystal Shrine sequence puzzle solves cleanly",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "17. Constellation 3x3 Grid puzzle unlocks Final Area (Birthday Sanctuary)",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "18. All 4 Sanctuary Memory Pedestals ignite and display photos",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "19. Lighting all 4 Birthday Cake candles launches the Final Birthday Showcase",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "20. Admin Panel edits update the actual game while preserving player save progress",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "21. Admin validator prevents impossible puzzle configurations",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "22-360. Viewport Small Phone (360x640) keeps controls inside screen with zero horizontal scroll",
+      "passed": true,
+      "detail": "joyBottom=628, actRight=343"
+    },
+    {
+      "name": "22-412. Viewport Mid/Large Phone (412x915) keeps controls inside screen with zero horizontal scroll",
+      "passed": true,
+      "detail": "joyBottom=903, actRight=395"
+    },
+    {
+      "name": "22-768. Viewport Tablet (768x1024) keeps controls inside screen with zero horizontal scroll",
+      "passed": true,
+      "detail": "joyBottom=1008, actRight=750"
+    },
+    {
+      "name": "22-1366. Viewport Desktop (1366x768) keeps controls inside screen with zero horizontal scroll",
+      "passed": true,
+      "detail": "joyBottom=752, actRight=1348"
+    },
+    {
+      "name": "23. Desktop WASD moves character & window blur clears stuck keys",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "24. Audio can be completely disabled without breaking gameplay",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "25. Save system persists unlocked areas, solved puzzles & collected items",
+      "passed": true,
+      "detail": ""
+    }
+  ]
+}

@@ -4,7 +4,7 @@
 (function (global) {
   global.DEFAULT_GAME_CONFIG = {
   "version": "1.0.0",
-  "lastModified": "2026-10-31T01:37:34.922Z",
+  "lastModified": "2026-10-31T15:58:04.960Z",
   "admin": {
     "passphrase": "starlight",
     "passphraseHint": "Default passphrase is 'starlight' (changeable in General Settings)"
@@ -211,7 +211,7 @@
       "dialogueBeforeQuest": [
         "The Astral Bridge to the Starfall Forest is controlled by the Clocktower Dial right behind the fountain.",
         "Here is the **Third Dial Clue**: \"Last twinkles the radiant **STAR** (⭐) to guide night wanderers home.\"",
-        "Once you have all three clues from Pip, Lyra, and me, interact with the **Clocktower Dial** in the north square!"
+        "Once you have all three clues from Hazel, Nirjar, and me, interact with the **Clocktower Dial** in the north square!"
       ],
       "dialogueDuringQuest": [
         "The **Third Symbol** on the Clocktower Dial is the **STAR** (⭐). Talk to Pip and Lyra for the first two!"
@@ -324,7 +324,7 @@
     },
     {
       "id": "item_silver_whisk",
-      "name": "Pip's Silver Whisk",
+      "name": "Hazel's Silver Whisk",
       "type": "quest_item",
       "areaId": "village",
       "x": 230,
@@ -332,8 +332,8 @@
       "icon": "🥄",
       "color": "#e0fbfc",
       "isSecret": false,
-      "description": "Pip the Baker's prized silver whisk, dropped near the southern market barrels.",
-      "pickupMessage": "Collected Pip's Silver Whisk! Bring it back to Pip at the Bakery stall."
+      "description": "Hazel the Baker's prized silver whisk, dropped near the southern market barrels.",
+      "pickupMessage": "Collected Hazel's Silver Whisk! Bring it back to Pip at the Bakery stall."
     },
     {
       "id": "item_memory_token_1",
@@ -443,7 +443,7 @@
       "title": "The Baker's Missing Whisk",
       "areaId": "village",
       "isMandatory": true,
-      "description": "Find Pip's Silver Whisk near the southern market barrels and return it to Pip the Baker for the First Clocktower Clue.",
+      "description": "Find Hazel's Silver Whisk near the southern market barrels and return it to Pip the Baker for the First Clocktower Clue.",
       "objectives": [
         "Find Pip's Silver Whisk in the southern market corner",
         "Talk to Pip the Baker to return the whisk"
@@ -460,7 +460,7 @@
       "title": "Chimes of the Memory Village",
       "areaId": "village",
       "isMandatory": true,
-      "description": "Gather the 3 symbol clues from Pip, Lyra, and Orion, then align the Clocktower Dial in the northern square to summon the Astral Bridge.",
+      "description": "Gather the 3 symbol clues from Hazel, Nirjar, and Lemon, then align the Clocktower Dial in the northern square to summon the Astral Bridge.",
       "objectives": [
         "Help Pip the Baker to learn the 1st symbol",
         "Speak with Archivist Lyra and Lamplighter Orion for the 2nd & 3rd symbols",
@@ -559,7 +559,7 @@
       "areaId": "village",
       "difficulty": "normal",
       "instructions": "Tap each of the 3 rotating dials to cycle through the celestial symbols until they match the villagers' three clues in order (1st, 2nd, 3rd).",
-      "question": "Align the 3 Clocktower Dials according to the clues from Pip the Baker (1st), Archivist Lyra (2nd), and Lamplighter Orion (3rd).",
+      "question": "Align the 3 Clocktower Dials according to the clues from Hazel the Baker (1st), Archivist Nirjar (2nd), and Lamplighter Lemon (3rd).",
       "options": [
         "☀️ SUN",
         "🌙 MOON",

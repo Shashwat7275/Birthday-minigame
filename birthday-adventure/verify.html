@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Automated Functional Verification Suite</title>
+</head>
+<body>
+  <pre id="test-results">Running tests...</pre>
+  <iframe id="game-frame" src="index.html" style="width:390px; height:844px; border:1px solid #333;"></iframe>
+  <iframe id="admin-frame" src="admin.html?pass=starlight" style="width:1024px; height:768px; border:1px solid #333;"></iframe>
+
+  <script>
+    window.addEventListener("load", async () => {
+      const results = [];
+      const assert = (name, cond, detail = "") => {
+        results.push({ name, passed: Boolean(cond), detail });
+      };
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+      try {
+        await wait(600);
+        const gWin = document.getElementById("game-frame").contentWindow;
+        const gDoc = document.getElementById("game-frame").contentDocument;
+        const aWin = document.getElementById("admin-frame").contentWindow;
+        const aDoc = document.getElementById("admin-frame").contentDocument;
+
+        // Reset clean state
+        gWin.StorageManager.resetConfigToDefault();
+        gWin.StorageManager.resetSaveState();
+        gWin.BirthdayGame.reloadConfigAndState();
+
+        // 1. Title screen check
+        const titleEl = gDoc.getElementById("title-game-name");
+        assert("1. Title screen loads with game title", titleEl && titleEl.textContent.includes("Little Universe"));
+
+        // 2. Start New Game
+        gDoc.getElementById("btn-new-game").click();
+        await wait(150);
+        assert("2. New game starts in Area 1 (garden)", gWin.BirthdayGame.running && gWin.BirthdayGame.currentArea.id === "garden");
+
+        // 3. Dismiss opening narration dialogue
+        while (gWin.BirthdayGame.dialogueOpen) {
+          gDoc.getElementById("dialogue-next-btn").click();
+          await wait(50);
+        }
+        assert("3. Opening dialogue advances and closes cleanly", !gWin.BirthdayGame.dialogueOpen);
+
+        // 4. Test mobile joystick vector movement & stopping
+        const startX = gWin.BirthdayGame.player.x;
+        gWin.GameInput.setSimulatedVector(1, 0);
+        gWin.BirthdayGame.update(0.2);
+        const movedX = gWin.BirthdayGame.player.x;
+        gWin.GameInput.setSimulatedVector(0, 0);
+        gWin.BirthdayGame.update(0.2);
+        const stoppedX = gWin.BirthdayGame.player.x;
+        assert("4. Joystick moves character smoothly & stops on release", movedX > startX && stoppedX === movedX, `start=${startX}, moved=${movedX}`);
+
+        // 5. Test solid wall collision
+        gWin.BirthdayGame.player.x = 60;
+        gWin.GameInput.setSimulatedVector(-1, 0);
+        for (let i = 0; i < 10; i++) gWin.BirthdayGame.update(0.05);
+        gWin.GameInput.setSimulatedVector(0, 0);
+        assert("5. Collision detection prevents walking through solid boundaries", gWin.BirthdayGame.player.x >= 55, `x=${gWin.BirthdayGame.player.x}`);
+
+        // 6. Test NPC proximity & talking (Elder Rowan at 420, 340)
+        gWin.BirthdayGame.player.x = 420;
+        gWin.BirthdayGame.player.y = 355;
+        gWin.BirthdayGame.update(0.05);
+        assert("6. Proximity detector highlights Elder Rowan with Talk action", gWin.BirthdayGame.nearbyTarget && gWin.BirthdayGame.nearbyTarget.actionLabel === "Talk");
+        gWin.BirthdayGame.handlePrimaryAction();
+        assert("7. Interacting with NPC opens dialogue", gWin.BirthdayGame.dialogueOpen);
+        while (gWin.BirthdayGame.dialogueOpen) {
+          gWin.BirthdayGame.advanceDialogue();
+        }
+
+        // 7. Test locked portal enforcement before quest completion
+        gWin.BirthdayGame.player.x = 1100;
+        gWin.BirthdayGame.player.y = 430;
+        gWin.BirthdayGame.update(0.05);
+        gWin.BirthdayGame.handlePrimaryAction();
+        assert("8. Locked portal prevents premature area transition", gWin.BirthdayGame.currentArea.id === "garden" && gWin.BirthdayGame.dialogueOpen);
+        while (gWin.BirthdayGame.dialogueOpen) gWin.BirthdayGame.advanceDialogue();
+
+        // 8. Collect all 3 Starlight Petals in Area 1 + Secret Clover
+        const gardenItems = ["item_petal_1", "item_petal_2", "item_petal_3", "secret_garden_charm"];
+        for (const id of gardenItems) {
+          const item = gWin.BirthdayGame.config.collectibles.find((c) => c.id === id);
+          gWin.BirthdayGame.player.x = item.x;
+          gWin.BirthdayGame.player.y = item.y;
+          gWin.BirthdayGame.update(0.05);
+          gWin.BirthdayGame.handlePrimaryAction();
+        }
+        assert("9. Collectibles are picked up and added to Inventory", gWin.BirthdayGame.save.collectedItems.length === 4);
+
+        // 9. Open Inventory & verify items render
+        gWin.BirthdayGame.toggleInventoryModal();
+        const invCards = gDoc.querySelectorAll(".inventory-item-card");
+        assert("10. Inventory modal renders collected items", invCards.length === 4);
+        gWin.BirthdayGame.toggleInventoryModal();
+
+        // 10. Solve Area 1 Sunbeam Pedestal Puzzle
+        gWin.BirthdayGame.openPuzzleModal("puzzle_garden_pedestal");
+        const socketBtns = gDoc.querySelectorAll("#puzzle-interactive-body .puzzle-socket-card");
+        socketBtns.forEach((b) => b.click());
+        assert(
+          "11. Sunbeam Pedestal puzzle completes Quest 1 and unlocks Area 2 (village)",
+          gWin.BirthdayGame.save.completedQuests.includes("quest_garden_intro") &&
+            gWin.BirthdayGame.save.unlockedAreas.includes("village")
+        );
+        gWin.BirthdayGame.closeModal("modal-puzzle");
+
+        // 11. Transition to Area 2 (Memory Village)
+        gWin.BirthdayGame.loadArea("village", "spawn");
+        assert("12. Level transition loads Area 2 (The Memory Village)", gWin.BirthdayGame.currentArea.id === "village");
+
+        // 12. Collect Pip's Silver Whisk & talk to Pip
+        const whisk = gWin.BirthdayGame.config.collectibles.find((c) => c.id === "item_silver_whisk");
+        gWin.BirthdayGame.player.x = whisk.x;
+        gWin.BirthdayGame.player.y = whisk.y;
+        gWin.BirthdayGame.update(0.05);
+        gWin.BirthdayGame.handlePrimaryAction();
+
+        const pip = gWin.BirthdayGame.config.npcs.find((n) => n.id === "npc_pip");
+        gWin.BirthdayGame.player.x = pip.x;
+        gWin.BirthdayGame.player.y = pip.y + 15;
+        gWin.BirthdayGame.update(0.05);
+        gWin.BirthdayGame.handlePrimaryAction();
+        while (gWin.BirthdayGame.dialogueOpen) gWin.BirthdayGame.advanceDialogue();
+        assert("13. Returning Silver Whisk to Pip completes Baker quest", gWin.BirthdayGame.save.completedQuests.includes("quest_village_whisk"));
+
+        // 13. Solve Clocktower Dial Puzzle (SUN, MOON, STAR)
+        gWin.BirthdayGame.openPuzzleModal("puzzle_village_dial");
+        const dialCards = gDoc.querySelectorAll("#puzzle-interactive-body .dial-card");
+        // Initial indices are [3, 3, 3] (COMET). Clicking once -> 0 (SUN), twice -> 1 (MOON), 3 times -> 2 (STAR)
+        dialCards[0].click(); // SUN
+        dialCards[1].click();
+        dialCards[1].click(); // MOON
+        dialCards[2].click();
+        dialCards[2].click();
+        dialCards[2].click(); // STAR
+        gDoc.querySelector("#puzzle-interactive-body .puzzle-submit-btn").click();
+        assert(
+          "14. Clocktower 3-Lantern Dial puzzle validates clues and unlocks Area 3 (forest)",
+          gWin.BirthdayGame.save.solvedPuzzles.includes("puzzle_village_dial") &&
+            gWin.BirthdayGame.save.unlockedAreas.includes("forest")
+        );
+        gWin.BirthdayGame.closeModal("modal-puzzle");
+
+        // 14. Transition to Area 3 (Starfall Forest) & test Mist Brook hazard recovery
+        gWin.BirthdayGame.loadArea("forest", "spawn");
+        gWin.BirthdayGame.player.x = 550;
+        gWin.BirthdayGame.player.y = 670; // In water outside stepping stones
+        gWin.BirthdayGame.update(0.05);
+        assert(
+          "15. Forest Mist Brook hazard recovers player safely to dry bank checkpoint",
+          gWin.BirthdayGame.player.x === 430 && gWin.BirthdayGame.player.y === 450
+        );
+
+        // 15. Collect 3 Astral Dewdrops & solve Echo Shrine + Constellation Gate
+        ["item_dewdrop_1", "item_dewdrop_2", "item_dewdrop_3"].forEach((id) => {
+          const item = gWin.BirthdayGame.config.collectibles.find((c) => c.id === id);
+          gWin.BirthdayGame.player.x = item.x;
+          gWin.BirthdayGame.player.y = item.y;
+          gWin.BirthdayGame.update(0.05);
+          gWin.BirthdayGame.handlePrimaryAction();
+        });
+
+        gWin.BirthdayGame.openPuzzleModal("puzzle_forest_echo");
+        const crystalBtns = gDoc.querySelectorAll("#puzzle-interactive-body .puzzle-socket-card");
+        // Click TEAL(0), VIOLET(1), GOLD(2), ROSE(3)
+        crystalBtns[0].click();
+        crystalBtns[1].click();
+        crystalBtns[2].click();
+        crystalBtns[3].click();
+        assert("16. Echo Crystal Shrine sequence puzzle solves cleanly", gWin.BirthdayGame.save.solvedPuzzles.includes("puzzle_forest_echo"));
+        gWin.BirthdayGame.closeModal("modal-puzzle");
+
+        gWin.BirthdayGame.openPuzzleModal("puzzle_forest_constellation");
+        const gridCells = gDoc.querySelectorAll("#puzzle-interactive-body .constellation-cell");
+        // Center (4) starts lit; click corners 0, 2, 6, 8
+        [0, 2, 6, 8].forEach((idx) => gridCells[idx].click());
+        gDoc.querySelector("#puzzle-interactive-body .puzzle-submit-btn").click();
+        assert(
+          "17. Constellation 3x3 Grid puzzle unlocks Final Area (Birthday Sanctuary)",
+          gWin.BirthdayGame.save.unlockedAreas.includes("sanctuary")
+        );
+        gWin.BirthdayGame.closeModal("modal-puzzle");
+
+        // 16. Enter Area 4 (The Birthday Sanctuary), light 4 Memory Pedestals & complete Cake Wish
+        gWin.BirthdayGame.loadArea("sanctuary", "spawn");
+        ["pedestal_mem_1", "pedestal_mem_2", "pedestal_mem_3", "pedestal_mem_4"].forEach((pid) => {
+          const ped = gWin.BirthdayGame.currentArea.interactables.find((o) => o.id === pid);
+          gWin.BirthdayGame.player.x = ped.x;
+          gWin.BirthdayGame.player.y = ped.y;
+          gWin.BirthdayGame.update(0.05);
+          gWin.BirthdayGame.handlePrimaryAction();
+          gWin.BirthdayGame.closeModal("modal-puzzle");
+        });
+        assert("18. All 4 Sanctuary Memory Pedestals ignite and display photos", gWin.BirthdayGame.save.litPedestals.length === 4);
+
+        gWin.BirthdayGame.openPuzzleModal("puzzle_sanctuary_wish");
+        const candleBtns = gDoc.querySelectorAll("#puzzle-interactive-body .puzzle-socket-card");
+        candleBtns.forEach((b) => b.click());
+        await wait(950);
+        const finaleModal = gDoc.getElementById("modal-finale");
+        assert("19. Lighting all 4 Birthday Cake candles launches the Final Birthday Showcase", !finaleModal.classList.contains("hidden"));
+
+        // 17. Test Admin Panel Customization & Verify Player Progress Is Preserved
+        aDoc.getElementById("cfg-recipient-name").value = "Aria";
+        aDoc.getElementById("cfg-finale-banner").value = "Happy 22nd Birthday, Aria! 🌟";
+        aWin.AdminApp.saveAll();
+
+        gWin.BirthdayGame.reloadConfigAndState();
+        gWin.BirthdayGame.openFinalBirthdayShowcase();
+        const updatedBanner = gDoc.getElementById("finale-banner-title").textContent;
+        assert(
+          "20. Admin Panel edits update the actual game while preserving player save progress",
+          updatedBanner.includes("Aria") &&
+            gWin.BirthdayGame.save.collectedItems.length === 8 &&
+            gWin.BirthdayGame.save.unlockedAreas.includes("sanctuary")
+        );
+
+        // 18. Test Admin validation catches invalid puzzle edits
+        const invalidCfg = JSON.parse(JSON.stringify(aWin.AdminApp.config));
+        invalidCfg.puzzles.find((p) => p.id === "puzzle_village_dial").solution = ["INVALID_SYMBOL"];
+        const valCheck = aWin.StorageManager.validateConfig(invalidCfg);
+        assert("21. Admin validator prevents impossible puzzle configurations", !valCheck.valid && valCheck.errors.length > 0);
+
+        // 19. Test Representative Mobile & Desktop Viewports (360px, 390px, 768px, 1366px)
+        const gameFrame = document.getElementById("game-frame");
+        const viewports = [
+          { w: 360, h: 640, label: "Small Phone (360x640)" },
+          { w: 412, h: 915, label: "Mid/Large Phone (412x915)" },
+          { w: 768, h: 1024, label: "Tablet (768x1024)" },
+          { w: 1366, h: 768, label: "Desktop (1366x768)" }
+        ];
+        gWin.BirthdayGame.closeAllModals();
+        for (const vp of viewports) {
+          gameFrame.style.width = vp.w + "px";
+          gameFrame.style.height = vp.h + "px";
+          gWin.BirthdayGame.handleResize();
+          await wait(60);
+          const joyRect = gDoc.getElementById("joystick-zone").getBoundingClientRect();
+          const actRect = gDoc.getElementById("action-btn").getBoundingClientRect();
+          const inBounds =
+            joyRect.left >= 0 &&
+            joyRect.bottom <= vp.h &&
+            actRect.right <= vp.w &&
+            actRect.bottom <= vp.h &&
+            gDoc.documentElement.scrollWidth <= vp.w;
+          assert(`22-${vp.w}. Viewport ${vp.label} keeps controls inside screen with zero horizontal scroll`, inBounds, `joyBottom=${Math.round(joyRect.bottom)}, actRight=${Math.round(actRect.right)}`);
+        }
+
+        // 20. Test Desktop Keyboard Input (WASD + Space) & Focus-loss safety
+        const beforeKeyX = gWin.BirthdayGame.player.x;
+        gWin.dispatchEvent(new gWin.KeyboardEvent("keydown", { code: "KeyD" }));
+        gWin.BirthdayGame.update(0.15);
+        const afterKeyX = gWin.BirthdayGame.player.x;
+        gWin.dispatchEvent(new gWin.Event("blur")); // Simulate tab focus loss
+        const vecAfterBlur = gWin.GameInput.getMovementVector();
+        assert("23. Desktop WASD moves character & window blur clears stuck keys", afterKeyX !== beforeKeyX && vecAfterBlur.x === 0 && vecAfterBlur.y === 0);
+
+        // 21. Test Audio Disable / Mute works without breaking gameplay
+        gWin.BirthdayGame.config.audio.musicEnabled = false;
+        gWin.BirthdayGame.config.audio.sfxEnabled = false;
+        gWin.GameAudio.applyConfig(gWin.BirthdayGame.config.audio);
+        gWin.GameAudio.playSfx("collect");
+        assert("24. Audio can be completely disabled without breaking gameplay", !gWin.GameAudio.musicEnabled && !gWin.GameAudio.sfxEnabled);
+
+        // 22. Test Save Persistence across reload & Reset Config
+        const savedBeforeReload = gWin.StorageManager.getSaveState();
+        assert("25. Save system persists unlocked areas, solved puzzles & collected items", savedBeforeReload.hasStarted && savedBeforeReload.solvedPuzzles.length === 5 && savedBeforeReload.collectedItems.length === 8);
+
+        // Clean up back to defaults so the user starts with a clean slate
+        aWin.StorageManager.resetConfigToDefault();
+        gWin.StorageManager.resetSaveState();
+      } catch (err) {
+        assert("Unexpected Runtime Error", false, err.stack || err.message);
+      }
+
+      const summary = {
+        total: results.length,
+        passed: results.filter((r) => r.passed).length,
+        failed: results.filter((r) => !r.passed).length,
+        results
+      };
+      document.getElementById("test-results").textContent = JSON.stringify(summary, null, 2);
+      try {
+        await fetch("/api/test-report", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(summary, null, 2)
+        });
+      } catch (e) {}
+    });
+  </script>
+</body>
+</html>
